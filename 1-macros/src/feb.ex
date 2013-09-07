@@ -48,7 +48,7 @@ defmodule Feb do
   # A POST request handler
   defmacro post(path, [do: code]) do
     # Disable hygiene so that `_data` is accessible in the client code
-    quote hygiene: false do
+    quote hygiene: [vars: false] do
       def handle(:post, unquote(path), _data) do
         unquote(code)
       end

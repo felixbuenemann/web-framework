@@ -7,7 +7,7 @@ defmodule Feb do
   defmacro __using__(opts) do
     module = __CALLER__.module
 
-    Module.add_attribute module, :after_compile, { __MODULE__, :default_handle }
+    Module.put_attribute module, :after_compile, { __MODULE__, :default_handle }
 
     root_val = Keyword.get(opts, :root, ".")
 
@@ -63,7 +63,7 @@ defmodule Feb do
   # POST request handler
   defmacro post(path, [do: code]) do
     # Disable hygiene so that `_data` is accessible in the client code
-    quote hygiene: false do
+    quote hygiene: [vars: false] do
       def handle(:post, unquote(path), _data) do
         unquote(code)
       end
@@ -74,16 +74,16 @@ defmodule Feb do
   defmacro multi_handle(path, [do: { :"->", _line, blocks }]) do
     # Iterate over each block in `blocks` and produce a separate `handle`
     # clause for it
-    Enum.map blocks, (function do
-      {[:get], code} ->
-        quote hygiene: false do
+    Enum.map blocks, (fn
+      {[:get], _, code} ->
+        quote hygiene: [vars: false] do
           def handle(:get, unquote(path), _query) do
             unquote(code)
           end
         end
 
-      {[:post], code} ->
-        quote hygiene: false do
+      {[:post], _, code} ->
+        quote hygiene: [vars: false] do
           def handle(:post, unquote(path), _data) do
             unquote(code)
           end
@@ -105,7 +105,10 @@ defmodule Feb do
   # code
   defmacro default_handle(_, _) do
     quote do
-      def handle(method, path, data // "")
+      def handle(method, path) do
+        handle(method, path, "")
+      end
+
       def handle(method, path, data) do
         cond do
           # Allow only the listed methods

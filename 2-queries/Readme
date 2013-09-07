@@ -8,6 +8,6 @@ $ iex
 { path, query } = Feb.split_path "/search?q=donut"
 import HelloServer
 handle :get, path, query
-handle :get, "/search", Orddict.new
+handle :get, "/search", HashDict.new
 # Let's also test our generic handler with a query
 handle :get, "/kvstore", URI.decode_query("key=value")
